@@ -109,18 +109,25 @@ public class Client {
 
                 sendChatMessage(message_string);
             }
+            else if (message_string.equalsIgnoreCase("/exit")){
+
+                out.writeUTF("exit");
+            }
         }
     }
 
     private static void sendChatMessage(String message_to_send) throws IOException {
 
-        out.writeUTF("M," + username +"," + message_to_send);
+        out.writeUTF("MESSAGE," + username +"," + message_to_send);
     }
 
     private static void uploadFile(Scanner scanner) throws IOException {
 
         String filepath = "src/main/resources/Client/" + username;
         File folder = new File(filepath);
+        if(!folder.exists()){
+            folder.mkdir();
+        }
         File[] files = folder.listFiles();
         if (files == null || files.length == 0) {
             System.out.println("No files to upload.");
@@ -159,12 +166,11 @@ public class Client {
         }
             out.flush();
 
-        // TODO: Notify the server that a file upload is starting (e.g., send file metadata)
-        // TODO: Read the file into a byte array and send it over the socket
+
     }
 
     private static void requestDownload(Scanner scanner) throws IOException {
-        // TODO: Send a request to the server to retrieve the list of available files
+
         out.writeUTF("DOWNLOAD");
         String fileL = in.readUTF();
 
@@ -221,7 +227,5 @@ public class Client {
         fileOutputStream.close();
         System.out.println("File received.");
 
-        // TODO: Display the file names and prompt the user to select one
-        // TODO: Download the selected file and save it to the user's folder in 'resources/Client/<username>'
     }
 }

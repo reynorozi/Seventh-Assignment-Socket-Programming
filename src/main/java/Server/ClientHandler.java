@@ -11,9 +11,9 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private List<ClientHandler> allClients;
     private String username;
     private static File[] files;
+    private boolean isinthechat  = true;
 
 
     public ClientHandler(Socket socket ) {
@@ -26,7 +26,8 @@ public class ClientHandler implements Runnable {
         try {
 
             in = new DataInputStream(socket.getInputStream());
-
+            out = new DataOutputStream(socket.getOutputStream());
+    
 
             while (true) {
 
@@ -42,36 +43,38 @@ public class ClientHandler implements Runnable {
                         handleLogin(username, pass);
                     }
                 }
-                if (request.startsWith("M,")){
+                else if (request.startsWith("MESSAGE,")){
 
-                    String message = request.replace("M,","");
+
+                    String message = request.replace("MESSAGE,","");
                     System.out.println(message);
                     broadcast(message);
                 }
 //                UPLOAD,FILENAME,FILELENGHT
-                if (request.startsWith("UPLOAD,")) {
+               else if (request.startsWith("UPLOAD,")) {
                     System.out.println(request.replace("UPLOAD,",""));
                     String[] parts = request.split(",");
                     String filename = parts[1];
                     long length = Long.parseLong(parts[2]);
                     receiveFile(filename,length);
                 }
-                if(request.startsWith("DOWNLOAD")){
+                else if(request.startsWith("DOWNLOAD")){
                     sendFileList();
 
                 }
-                if (request.startsWith("AskFile,")) {
+                else if (request.startsWith("AskFile,")) {
                     String file = request.replace("AskFile,","");
                     sendFile(file);
+                }
+                else if (request.startsWith("exit")) {
+                    isinthechat = false;
                 }
 
             }
         }
         catch (Exception e) {
 
-        } finally {
-
-            allClients = Server.clients;
+            e.printStackTrace();
         }
     }
 
@@ -79,17 +82,18 @@ public class ClientHandler implements Runnable {
 
     private void sendMessage(String msg) throws IOException {
 
-        out.writeUTF("M;"+ msg);
+        out.writeUTF("MESSAGE;"+ msg);
 
     }
     private void broadcast(String msg) throws IOException {
 
-        String[] parts = msg.split(",");
-        String username = parts[0];
+        System.out.println("["+username+"]:"  + msg);
+        if(!isinthechat) {
+            isinthechat = true;
+        }
 
-
-        for (ClientHandler client : allClients) {
-            if (!client.username.equals(username)) {
+        for (ClientHandler client : Server.clients) {
+            if (!client.username.equals(username) && client.isinthechat) {
                 client.sendMessage(msg);
             }
         }
@@ -161,7 +165,6 @@ public class ClientHandler implements Runnable {
     private void handleLogin(String username, String password) throws IOException, ClassNotFoundException {
 
         boolean login = Server.authenticate(username, password);
-        out = new DataOutputStream(socket.getOutputStream());
         if(login){
             out.writeUTF("login:true");
         }

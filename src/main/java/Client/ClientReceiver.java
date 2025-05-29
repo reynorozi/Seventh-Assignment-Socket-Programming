@@ -21,19 +21,14 @@ public class ClientReceiver implements Runnable {
 
             String messageserver = in.readUTF();
 
-                if(messageserver.startsWith("M;")){
+                if(messageserver.startsWith("MESSAGE;")){
 
-                    String b = messageserver.replace("M;","");
+                    String b = messageserver.replace("MESSAGE;","");
                     String[] parts = b.split(",");
                     String username = parts[0];
                     String message = parts[1];
                     System.out.println("[" +username+"]:"  + message);
                 }
-
-
-
-                //TODO: Listen for new messages from server
-                //TODO: print the  new message in CLI
             }
         } catch (Exception e) {
             e.printStackTrace();
